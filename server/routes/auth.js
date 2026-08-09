@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 
 const bcrypt = require("bcryptjs");
@@ -12,8 +13,15 @@ const auth = require("../middleware/authMiddleware");
 router.post("/register", async (req, res) => {
   console.log("========== REGISTER API HIT ==========");
   console.log("BODY:", req.body);
+
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: "Database unavailable. Please check your MongoDB connection.",
+    });
+  }
+
   try {
-    const { name, email, password } = req.body;
+    const { Username, email, password } = req.body;
 
     let user = await User.findOne({ email });
 
@@ -24,7 +32,7 @@ router.post("/register", async (req, res) => {
     }
 
     user = new User({
-      name,
+      Username,
       email,
       password,
     });
@@ -49,6 +57,12 @@ router.post("/register", async (req, res) => {
 
 // LOGIN
 router.post("/login", async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: "Database unavailable. Please check your MongoDB connection.",
+    });
+  }
+
   try {
     const { email, password } = req.body;
 
@@ -102,6 +116,12 @@ router.post("/login", async (req, res) => {
 
 // CURRENT USER
 router.get("/me", auth, async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: "Database unavailable. Please check your MongoDB connection.",
+    });
+  }
+
   try {
     const user = await User.findById(req.user.id).select(
       "-password"

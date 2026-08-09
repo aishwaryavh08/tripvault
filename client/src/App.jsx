@@ -39,23 +39,122 @@
 
 // export default App;
 
+// import { Routes, Route, Navigate } from "react-router-dom";
+// import Login from "./pages/Login";
+// import Register from "./pages/Register";
+// import Dashboard from "./pages/Dashboard";
+// import TripPhotos from "./pages/TripPhotos";
+// import TripDetails from "./pages/TripDetails";
+// import Profile from "./pages/Profile";
+// import EditProfile from "./pages/EditProfile";
+// import PublicProfile from "./pages/PublicProfile";
+// import "./App.css";
+
+// function ProtectedRoute({ children }) {
+//   const token = localStorage.getItem("token");
+//   return token ? children : <Navigate to="/login" replace />;
+// }
+
+// function App() {
+//   return (
+//     <Routes>
+//       <Route path="/" element={<Navigate to="/login" replace />} />
+//       <Route path="/login" element={<Login />} />
+//       <Route path="/register" element={<Register />} />
+      
+//       <Route
+//   path="/dashboard"
+//   element={
+//     <ProtectedRoute>
+//       <Dashboard />
+//     </ProtectedRoute>
+//   }
+// />
+// <Route
+//   path="/edit-profile"
+//   element={
+//     <PublicProfile/>
+//   }
+// />
+
+// <Route
+//   path="/profile/:username"
+//   element={
+//     <ProtectedRoute>
+//       <Profile />
+//     </ProtectedRoute>
+//   }
+// />
+
+// <Route
+//   path="/trip/:id"
+//   element={
+//     <ProtectedRoute>
+//       <TripDetails />
+//     </ProtectedRoute>
+//   }
+// />
+
+// <Route
+//   path="/trip/:id/photos"
+//   element={
+//     <ProtectedRoute>
+//       <TripPhotos />
+//     </ProtectedRoute>
+//   }
+// />
+//     </Routes>
+    
+//   );
+// }
+
+// export default App;
+
+
+
 import { Routes, Route, Navigate } from "react-router-dom";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import TripPhotos from "./pages/TripPhotos";
+import TripDetails from "./pages/TripDetails";
+import EditProfile from "./pages/EditProfile";
+import PublicProfile from "./pages/PublicProfile";
+
 import "./App.css";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
+
   return token ? children : <Navigate to="/login" replace />;
 }
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+
+      {/* ================= HOME ================= */}
+
+      <Route
+        path="/"
+        element={<Navigate to="/login" replace />}
+      />
+
+      {/* ================= AUTH ================= */}
+
+      <Route
+        path="/login"
+        element={<Login />}
+      />
+
+      <Route
+        path="/register"
+        element={<Register />}
+      />
+
+      {/* ================= DASHBOARD ================= */}
+
       <Route
         path="/dashboard"
         element={
@@ -64,6 +163,47 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* ================= EDIT PROFILE ================= */}
+
+      <Route
+        path="/edit-profile"
+        element={
+          <ProtectedRoute>
+            <EditProfile />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ================= PUBLIC PROFILE ================= */}
+
+      <Route
+        path="/profile/:username"
+        element={<PublicProfile />}
+      />
+
+      {/* ================= TRIP DETAILS ================= */}
+
+      <Route
+        path="/trip/:id"
+        element={
+          <ProtectedRoute>
+            <TripDetails />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ================= TRIP PHOTOS ================= */}
+
+      <Route
+        path="/trip/:id/photos"
+        element={
+          <ProtectedRoute>
+            <TripPhotos />
+          </ProtectedRoute>
+        }
+      />
+
     </Routes>
   );
 }

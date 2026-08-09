@@ -203,6 +203,12 @@ body {
   color: #17324d;
 }
 
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 /* =========================
    DASHBOARD CONTENT
@@ -229,6 +235,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  /* Ensure children (welcome card, form, trips) always stack vertically
+     even if other rules try to change layout. This prevents the "side-by-side"
+     behaviour where the trips list appears beside the form. */
+  flex-wrap: nowrap;
 
   padding: 40px 30px 70px;
 }
@@ -332,11 +343,214 @@ body {
    ADD TRIP FORM
 ========================= */
 
+.edit-profile-page {
+  min-height: 100vh;
+  padding: 40px 20px 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      rgba(10, 30, 50, 0.55),
+      rgba(10, 30, 50, 0.55)
+    ),
+    url("https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=2000&q=85");
+
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.edit-profile-card {
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 35px;
+
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+}
+
+.edit-profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.edit-profile-form label {
+  color: #17324d;
+  font-weight: 600;
+}
+
+.edit-profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 5px;
+}
+
+.edit-profile-actions button {
+  width: 100%;
+}
+
+.profile-page {
+  min-height: 100vh;
+  padding: 20px 20px 70px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background:
+    linear-gradient(rgba(10, 30, 50, 0.6), rgba(10, 30, 50, 0.6)),
+    url("https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=2000&q=85") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-attachment: fixed !important;
+}
+
+.profile-shell {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-navbar {
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 35px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  color: white;
+  text-align: left;
+}
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.profile-hero .plane {
+  font-size: 44px;
+}
+
+.profile-card h1,
+.profile-card h2,
+.profile-card h3 {
+  color: white;
+}
+
+.profile-message {
+  color: #dff7e8;
+  margin-bottom: 16px;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-form label {
+  font-weight: 600;
+}
+
+.profile-form textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #17324d;
+}
+
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.profile-actions button {
+  width: 100%;
+}
+
+.profile-bio-box {
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.profile-trip-item {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.profile-edit-button {
+  margin-top: 8px;
+}
+
+.profile-trips-title {
+  margin-top: 28px;
+}
+
+.profile-empty {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.profile-trip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.profile-trip-item {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.profile-trip-item h3 {
+  margin: 0 0 6px;
+}
+
+.profile-trip-item p {
+  margin: 4px 0;
+}
+
 .trip-form-card {
   width: 100%;
   max-width: 650px;
 
-  margin-top: 30px;
+  margin: 30px auto 0;
   padding: 35px;
 
   background: rgba(255, 255, 255, 0.95);
@@ -386,6 +600,31 @@ body {
   color: #222;
 
   font-size: 15px;
+}
+
+.photo-upload-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  border: 1px dashed #d9dee7;
+  border-radius: 14px;
+  background: #f8fbff;
+  text-align: center;
+}
+
+.photo-upload-block input[type="file"] {
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+  cursor: pointer;
+}
+
+.photo-upload-block .photo-upload-help {
+  color: #667085;
+  font-size: 14px;
 }
 
 .trip-form-card textarea {
@@ -470,7 +709,9 @@ body {
   width: 100%;
   max-width: 1100px;
 
-  margin-top: 45px;
+  margin: 45px auto 0;
+  /* Keep the trips section on its own row and centered */
+  display: block;
 }
 
 .trips-section > h2 {
@@ -531,8 +772,8 @@ body {
 
   display: grid;
 
-  grid-template-columns:
-    repeat(auto-fit, minmax(280px, 1fr));
+  /* Force a single column so trip cards appear one after another */
+  grid-template-columns: 1fr;
 
   gap: 22px;
 }
@@ -631,6 +872,129 @@ body {
   line-height: 1.6;
 }
 
+.photo-preview,
+.trip-photo-wrapper {
+  width: 100%;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.photo-preview img,
+.trip-photo-wrapper img {
+  width: 100%;
+  height: 220px;
+  display: block;
+  object-fit: cover;
+}
+
+.trip-photo-section {
+  margin-top: 12px;
+}
+
+.trip-photo-wrapper {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #eef2f7;
+}
+
+.trip-photo-wrapper img {
+  width: 100%;
+  height: 220px;
+  display: block;
+  object-fit: cover;
+}
+
+.trip-photo-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.trip-photo-thumb {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eef2f7;
+}
+
+.trip-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.detail-page {
+  min-height: 100vh;
+  padding: 30px;
+}
+
+.detail-card {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 35px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+  color: white;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+}
+
+.detail-cover-image {
+  margin-top: 20px;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.detail-cover-image img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+}
+
+.detail-info-block {
+  margin-top: 25px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+}
+
+.detail-gallery-title {
+  margin-top: 30px;
+  margin-bottom: 12px;
+}
+
+.detail-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.detail-photo-item {
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  aspect-ratio: 1 / 1;
+}
+
+.detail-photo-item img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.detail-description {
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+}
 
 /* RATING */
 
@@ -851,7 +1215,8 @@ body {
 
 .trips-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  /* Single-column layout for desktop as well so items stack vertically */
+  grid-template-columns: 1fr;
   gap: 22px;
 }
 

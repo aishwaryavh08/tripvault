@@ -10,6 +10,7 @@ function Dashboard() {
     endDate: "",
     description: "",
     rating: "",
+    photoUrl: "",
   };
 
   const [user, setUser] = useState({});
@@ -19,6 +20,8 @@ function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
   const [dateSort, setDateSort] = useState("");
+  const [photoFiles, setPhotoFiles] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
 
   const [formData, setFormData] = useState(initialFormData);
 
@@ -76,27 +79,43 @@ function Dashboard() {
   // =========================
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
   };
 
   // =========================
   // ADD TRIP
   // =========================
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    setPhotoFiles(files);
+    setPreviewUrls(files.map((file) => URL.createObjectURL(file)));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      const data = new FormData();
+      data.append("title", formData.title);
+      data.append("destination", formData.destination);
+      if (formData.startDate) data.append("startDate", formData.startDate);
+      if (formData.endDate) data.append("endDate", formData.endDate);
+      if (formData.description) data.append("description", formData.description);
+      if (formData.rating) data.append("rating", Number(formData.rating));
+      photoFiles.forEach((file) => data.append("photos", file));
+
+      let response;
+
       if (editingTripId) {
-        const updatedResponse = await axios.put(
+        response = await axios.put(
           `http://localhost:5000/api/trips/${editingTripId}`,
-          {
-            ...formData,
-            rating: formData.rating ? Number(formData.rating) : undefined,
-          },
+          data,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -106,37 +125,30 @@ function Dashboard() {
 
         setTrips((prevTrips) =>
           prevTrips.map((trip) =>
-            trip._id === editingTripId ? updatedResponse.data : trip
+            trip._id === editingTripId ? response.data : trip
           )
         );
 
         alert("Trip updated successfully!");
       } else {
-        const response = await axios.post(
-          "http://localhost:5000/api/trips",
-          {
-            ...formData,
-            rating: formData.rating ? Number(formData.rating) : undefined,
+        response = await axios.post("http://localhost:5000/api/trips", data, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        });
 
         setTrips((prevTrips) => [response.data, ...prevTrips]);
-
         alert("Trip added successfully!");
       }
 
       setFormData(initialFormData);
-
+      setPhotoFile(null);
+      setPreviewUrl("");
       setEditingTripId(null);
       setShowForm(false);
     } catch (error) {
       console.log(error);
-      alert("Could not add trip.");
+      alert("Could not save trip.");
     }
   };
 
@@ -227,13 +239,49 @@ function Dashboard() {
         : "",
       description: trip.description || "",
       rating: trip.rating ? String(trip.rating) : "",
+      photoUrl: trip.photoUrl || "",
     });
+    setPhotoFile(null);
+    setPreviewUrl(trip.photoUrl || "");
     setShowForm(true);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     navigate("/login");
+  };
+
+  const getCoverPhoto = (trip) => {
+    if (trip.photoUrl) {
+      return trip.photoUrl;
+    }
+
+    if (Array.isArray(trip.photos) && trip.photos.length > 0) {
+      return trip.photos[0];
+    }
+
+    if (typeof trip.photos === "string" && trip.photos.trim()) {
+      return trip.photos;
+    }
+
+    return "";
+  };
+
+  const getAdditionalPhotos = (trip) => {
+    const photos = [];
+
+    if (Array.isArray(trip.photos) && trip.photos.length > 0) {
+      photos.push(...trip.photos.filter(Boolean));
+    } else if (typeof trip.photos === "string" && trip.photos.trim()) {
+      photos.push(trip.photos);
+    }
+
+    if (trip.photoUrl) {
+      photos.push(trip.photoUrl);
+    }
+
+    const coverPhoto = getCoverPhoto(trip);
+    return [...new Set(photos.filter((photo) => photo && photo !== coverPhoto))];
   };
 
   return (
@@ -246,12 +294,33 @@ function Dashboard() {
           ✈️ TripVault
         </div>
 
-        <button
-          className="logout-button"
-          onClick={logout}
-        >
-          Logout
-        </button>
+        <div className="navbar-actions">
+          <button
+            className="logout-button"
+            onClick={() => {
+              const profileName = user?.Username || user?.username || user?.name;
+              if (profileName) {
+                navigate(`/profile/${encodeURIComponent(profileName)}`);
+              }
+            }}
+          >
+            Public Profile
+          </button>
+
+          <button
+            className="logout-button"
+            onClick={() => navigate("/edit-profile")}
+          >
+            Edit Profile
+          </button>
+
+          <button
+            className="logout-button"
+            onClick={logout}
+          >
+            Logout
+          </button>
+        </div>
       </nav>
 
       {/* ================= MAIN ================= */}
@@ -293,6 +362,12 @@ function Dashboard() {
               <span>Email</span>
               <strong>
                 {user.email || "—"}
+              </strong>
+            </div>
+            <div>
+              <span>Bio</span>
+              <strong>
+                {user.bio || "No bio yet."}
               </strong>
             </div>
 
@@ -376,6 +451,33 @@ function Dashboard() {
                 onChange={handleChange}
               />
 
+              <div className="photo-upload-block">
+                <label className="photo-label">
+                  Trip Photo
+                </label>
+
+                <input
+                  type="file"
+                  name="photo"
+                  accept="image/jpeg, image/jpg, image/png"
+                  onChange={handleFileChange}
+                />
+
+                <span className="photo-upload-help">
+                  Choose a photo to represent your trip.
+                </span>
+              </div>
+
+              {previewUrl && (
+                <div className="photo-preview">
+                  <img
+                    src={previewUrl}
+                    alt="Trip preview"
+                    className="preview-image"
+                  />
+                </div>
+              )}
+
               <select
                 name="rating"
                 value={formData.rating}
@@ -423,6 +525,8 @@ function Dashboard() {
                   onClick={() => {
                     setShowForm(false);
                     setEditingTripId(null);
+                    setPhotoFile(null);
+                    setPreviewUrl("");
                     setFormData({
                       title: "",
                       destination: "",
@@ -430,6 +534,7 @@ function Dashboard() {
                       endDate: "",
                       description: "",
                       rating: "",
+                      photoUrl: "",
                     });
                   }}
                 >
@@ -520,6 +625,8 @@ function Dashboard() {
                 <div
                   className="trip-card"
                   key={trip._id}
+                  onClick={() => navigate(`/trip/${trip._id}`)}
+                  style={{ cursor: "pointer" }}
                 >
 
                   <div className="trip-card-top">
@@ -554,6 +661,49 @@ function Dashboard() {
                     </div>
 
                   </div>
+
+                  {(() => {
+                    const coverPhoto = getCoverPhoto(trip);
+                    const additionalPhotos = getAdditionalPhotos(trip);
+
+                    return coverPhoto ? (
+                      <div
+                        className="trip-photo-section"
+                        onClick={() => navigate(`/trip/${trip._id}/photos`)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            navigate(`/trip/${trip._id}/photos`);
+                          }
+                        }}
+                      >
+                        <div className="trip-photo-wrapper">
+                          <img
+                            src={coverPhoto}
+                            alt={trip.title}
+                            className="trip-photo"
+                            loading="lazy"
+                          />
+                        </div>
+
+                        {additionalPhotos.length > 0 && (
+                          <div className="trip-photo-thumbnails">
+                            {additionalPhotos.slice(0, 3).map((photo, index) => (
+                              <div className="trip-photo-thumb" key={`${trip._id}-${photo}-${index}`}>
+                                <img src={photo} alt={`${trip.title} extra ${index + 1}`} loading="lazy" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="trip-photo-wrapper empty-photo">
+                        <p>No trip photo</p>
+                      </div>
+                    );
+                  })()}
 
                   <div className="trip-dates">
 
