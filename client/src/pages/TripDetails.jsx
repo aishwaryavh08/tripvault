@@ -14,7 +14,7 @@ function TripDetails() {
   const [uploadError, setUploadError] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
 
-  useEffect(() => {
+  useEffect(() => { 
     const fetchTrip = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -95,7 +95,7 @@ function TripDetails() {
     const formData = new FormData();
 
     selectedFiles.forEach((file) => {
-      formData.append("images", file);
+      formData.append("photos", file);
     });
 
     try {

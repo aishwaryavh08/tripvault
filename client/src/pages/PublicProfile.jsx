@@ -38,62 +38,58 @@ function PublicProfile() {
 
   return (
     <div className="public-profile-page">
-
       <button onClick={() => navigate("/dashboard")}>
         ← Back to Dashboard
       </button>
 
       <div className="profile-card">
-
-        <h1>@{profile.username}</h1>
-
-        <p>
-          {profile.bio || "No bio added yet."}
-        </p>
-
+        <h1>{profile.name || profile.username || "Traveler"}</h1>
+        <p className="profile-handle">@{profile.username}</p>
+        <p>{profile.bio || "No bio added yet."}</p>
       </div>
 
       <div className="profile-trips">
-
         <h2>My Journeys</h2>
 
         {profile.trips.length === 0 ? (
           <p>No trips yet.</p>
         ) : (
           <div className="trips-grid">
+            {profile.trips.map((trip) => {
+              const cover = trip.coverImage || trip.photoUrl || "";
 
-            {profile.trips.map((trip) => (
-              <div
-                className="trip-card"
-                key={trip._id}
-                onClick={() => navigate(`/trip/${trip._id}`)}
-                style={{ cursor: "pointer" }}
-              >
+              return (
+                <div
+                  className="trip-card"
+                  key={trip._id}
+                  onClick={() => navigate(`/trip/${trip._id}`)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {cover && (
+                    <div className="trip-photo-wrapper">
+                      <img src={cover} alt={trip.title} className="trip-photo" loading="lazy" />
+                    </div>
+                  )}
 
-                <h3>{trip.title}</h3>
+                  <h3>{trip.title}</h3>
 
-                <p>📍 {trip.destination}</p>
+                  <p>📍 {trip.destination}</p>
 
-                <p>
-                  {trip.startDate
-                    ? new Date(trip.startDate).toLocaleDateString()
-                    : "No start date"}
-                </p>
-
-                {trip.rating && (
                   <p>
-                    {"⭐".repeat(trip.rating)}
+                    {trip.startDate
+                      ? new Date(trip.startDate).toLocaleDateString()
+                      : "No start date"}
                   </p>
-                )}
 
-              </div>
-            ))}
-
+                  {trip.rating && (
+                    <p>{"⭐".repeat(trip.rating)}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
-
       </div>
-
     </div>
   );
 }

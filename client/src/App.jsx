@@ -132,79 +132,57 @@ function ProtectedRoute({ children }) {
 
 function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      {/* ================= HOME ================= */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/"
-        element={<Navigate to="/login" replace />}
-      />
+        <Route
+          path="/edit-profile"
+          element={
+            <ProtectedRoute>
+              <EditProfile />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* ================= AUTH ================= */}
+        <Route path="/profile/:username" element={<PublicProfile />} />
 
-      <Route
-        path="/login"
-        element={<Login />}
-      />
+        <Route
+          path="/trip/:id"
+          element={
+            <ProtectedRoute>
+              <TripDetails />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/register"
-        element={<Register />}
-      />
+        <Route
+          path="/trip/:id/photos"
+          element={
+            <ProtectedRoute>
+              <TripPhotos />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
 
-      {/* ================= DASHBOARD ================= */}
-
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ================= EDIT PROFILE ================= */}
-
-      <Route
-        path="/edit-profile"
-        element={
-          <ProtectedRoute>
-            <EditProfile />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ================= PUBLIC PROFILE ================= */}
-
-      <Route
-        path="/profile/:username"
-        element={<PublicProfile />}
-      />
-
-      {/* ================= TRIP DETAILS ================= */}
-
-      <Route
-        path="/trip/:id"
-        element={
-          <ProtectedRoute>
-            <TripDetails />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ================= TRIP PHOTOS ================= */}
-
-      <Route
-        path="/trip/:id/photos"
-        element={
-          <ProtectedRoute>
-            <TripPhotos />
-          </ProtectedRoute>
-        }
-      />
-
-    </Routes>
+      <footer className="app-footer">
+        <p>
+          © 2026 TripVault • Built by <a href="https://github.com" target="_blank" rel="noreferrer">Aishwarya V H</a>
+        </p>
+      </footer>
+    </>
   );
 }
 

@@ -117,6 +117,12 @@ const tripSchema = new mongoose.Schema(
       default: "",
     },
 
+    coverImage: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     // All uploaded photos
     photos: {
       type: [String],

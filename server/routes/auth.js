@@ -21,9 +21,20 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    const { Username, email, password } = req.body;
+    const rawUsername = req.body.Username || req.body.username || req.body.name || "";
+    const username = String(rawUsername).trim();
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
 
-    let user = await User.findOne({ email });
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        message: "Please fill all fields",
+      });
+    }
+
+    let user = await User.findOne({
+      $or: [{ email }, { username }, { Username: username }],
+    });
 
     if (user) {
       return res.status(400).json({
@@ -32,13 +43,14 @@ router.post("/register", async (req, res) => {
     }
 
     user = new User({
-      Username,
+      Username: username,
+      username,
+      name: username,
       email,
       password,
     });
 
     const salt = await bcrypt.genSalt(10);
-
     user.password = await bcrypt.hash(password, salt);
 
     await user.save();
@@ -64,7 +76,14 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    const { email, password } = req.body;
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const password = String(req.body.password || "");
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Please fill all fields",
+      });
+    }
 
     const user = await User.findOne({ email });
 
@@ -74,10 +93,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -87,7 +103,7 @@ router.post("/login", async (req, res) => {
 
     const payload = {
       user: {
-        id: user.id,
+        id: user._id.toString(),
       },
     };
 
@@ -102,6 +118,13 @@ router.post("/login", async (req, res) => {
 
         res.json({
           token,
+          user: {
+            id: user._id,
+            name: user.name || user.Username || user.username,
+            Username: user.Username || user.username || user.name,
+            username: user.username || user.Username || user.name,
+            email: user.email,
+          },
         });
       }
     );
@@ -123,11 +146,20 @@ router.get("/me", auth, async (req, res) => {
   }
 
   try {
-    const user = await User.findById(req.user.id).select(
-      "-password"
-    );
+    const user = await User.findById(req.user.id).select("-password");
 
-    res.json(user);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const userObj = user.toObject();
+    userObj.Username = userObj.Username || userObj.username || userObj.name || "";
+    userObj.username = userObj.username || userObj.Username || userObj.name || "";
+    userObj.name = userObj.name || userObj.Username || userObj.username || "";
+
+    res.json(userObj);
   } catch (err) {
     console.log(err);
 

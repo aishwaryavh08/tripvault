@@ -10,7 +10,7 @@ router.get("/:username/profile", async (req, res) => {
   try {
     const user = await User.findOne({
       $or: [{ username: req.params.username }, { Username: req.params.username }],
-    }).select("username Username bio");
+    }).select("name username Username bio");
 
     if (!user) {
       return res.status(404).json({
@@ -20,10 +20,11 @@ router.get("/:username/profile", async (req, res) => {
 
     const trips = await Trip.find({
       user: user._id,
-    }).select("title destination startDate endDate rating coverImage");
+    }).select("title destination startDate endDate rating coverImage photoUrl");
 
     res.json({
       userId: user._id,
+      name: user.name || user.Username || user.username || "",
       username: user.username || user.Username,
       bio: user.bio || "",
       trips,
@@ -40,7 +41,7 @@ router.get("/:username/profile", async (req, res) => {
 // UPDATE PROFILE
 router.put("/profile", auth, async (req, res) => {
   try {
-    const { Username, bio } = req.body;
+    const { Username, username, bio } = req.body;
 
     const user = await User.findById(req.user.id);
 
@@ -50,12 +51,12 @@ router.put("/profile", auth, async (req, res) => {
       });
     }
 
-    const trimmedUsername = typeof Username === "string" ? Username.trim() : "";
+    const trimmedUsername = typeof (Username || username) === "string" ? String(Username || username).trim() : "";
     const safeBio = typeof bio === "string" ? bio : "";
 
     if (trimmedUsername) {
       const existingUser = await User.findOne({
-        Username: trimmedUsername,
+        $or: [{ username: trimmedUsername }, { Username: trimmedUsername }],
         _id: { $ne: user._id },
       });
 
@@ -66,6 +67,8 @@ router.put("/profile", auth, async (req, res) => {
       }
 
       user.Username = trimmedUsername;
+      user.username = trimmedUsername;
+      user.name = user.name || trimmedUsername;
     }
 
     user.bio = safeBio;
@@ -74,7 +77,8 @@ router.put("/profile", auth, async (req, res) => {
     res.json({
       message: "Profile updated",
       bio: user.bio,
-      username: user.Username,
+      username: user.username || user.Username,
+      name: user.name || user.Username || user.username,
     });
   } catch (err) {
     console.log(err);

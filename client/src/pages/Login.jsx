@@ -1,35 +1,36 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { showToast } from "../utils/toast";
+import { API_BASE_URL } from "../config";
 
 function Login() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const login = async () => {
     if (!email || !password) {
-      alert("Please fill all fields");
+      showToast("Please fill all fields", "error");
       return;
     }
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        {
-          email,
-          password,
-        }
-      );
+      setLoading(true);
+      const res = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+        email,
+        password,
+      });
 
       localStorage.setItem("token", res.data.token);
-
-      alert("Login Successful");
-
+      showToast("Login successful", "success");
       navigate("/dashboard");
     } catch (err) {
-      alert(err.response?.data?.message || "Login Failed");
+      showToast(err.response?.data?.message || "Login failed", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,8 +60,8 @@ function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button onClick={login}>
-            Login
+          <button onClick={login} disabled={loading}>
+            {loading ? "Signing in..." : "Login"}
           </button>
         </div>
 

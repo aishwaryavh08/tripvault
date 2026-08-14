@@ -51,12 +51,29 @@
 //   console.log(`Server running on ${PORT}`);
 // });
 
+const path = require("path");
 const express = require("express");
 const router = express.Router();
 
 const Trip = require("../models/Trip");
 const auth = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
+
+function normalizeUploadedUrl(file) {
+  if (!file) return "";
+
+  const raw = file.path || file.url || file.secure_url || "";
+  if (!raw) return "";
+
+  const replaced = raw.replace(/\\/g, "/");
+
+  if (replaced.startsWith("http://") || replaced.startsWith("https://")) {
+    return replaced;
+  }
+
+  const filename = replaced.split("/uploads/").pop() || replaced.split("\\uploads\\").pop() || path.basename(replaced);
+  return `http://localhost:5000/uploads/${filename}`;
+}
 
 function buildTripUpdateData(body = {}, file) {
   const updateData = {};
@@ -105,10 +122,17 @@ router.post("/", auth, upload.array("photos", 10), async (req, res) => {
     } = req.body;
 
     const photoUrls = (req.files || [])
-      .map((file) => file.path || file.url || file.secure_url || "")
+      .map((file) => normalizeUploadedUrl(file))
       .filter(Boolean);
 
+    if (!title || !destination) {
+      return res.status(400).json({
+        message: "Title and destination are required",
+      });
+    }
+
     const photoUrl = photoUrls.length > 0 ? photoUrls[0] : "";
+    const coverImage = photoUrl || "";
     const photos = photoUrls.length > 1 ? photoUrls.slice(1) : [];
 
     const trip = new Trip({
@@ -119,6 +143,7 @@ router.post("/", auth, upload.array("photos", 10), async (req, res) => {
       description,
       rating,
       photoUrl,
+      coverImage,
       photos,
       user: req.user.id,
     });
@@ -248,7 +273,7 @@ router.get("/:id", auth, async (req, res) => {
 router.post(
   "/:id/upload",
   auth,
-  upload.array("images", 10),
+  upload.array("photos", 10),
   async (req, res) => {
     try {
       // Find the trip belonging to the logged-in user
@@ -270,9 +295,7 @@ router.post(
         });
       }
 
-      const imageUrls = req.files.map((file) =>
-        file.path || file.url || file.secure_url || ""
-      );
+      const imageUrls = req.files.map((file) => normalizeUploadedUrl(file));
 
       // Ensure we only keep valid URLs
       const validUrls = imageUrls.filter(Boolean);
@@ -286,6 +309,10 @@ router.post(
       // Keep the first uploaded image as the cover image if there is no cover yet
       if (!trip.photoUrl && validUrls.length > 0) {
         trip.photoUrl = validUrls[0];
+      }
+
+      if (!trip.coverImage && trip.photoUrl) {
+        trip.coverImage = trip.photoUrl;
       }
 
       trip.photos = [...new Set([...(trip.photos || []), ...validUrls])];
@@ -327,12 +354,16 @@ router.put("/:id", auth, upload.array("photos", 10), async (req, res) => {
 
     if (req.files && req.files.length > 0) {
       const newPhotoUrls = req.files
-        .map((file) => file.path || file.url || file.secure_url || "")
+        .map((file) => normalizeUploadedUrl(file))
         .filter(Boolean);
 
       if (newPhotoUrls.length > 0) {
         if (!trip.photoUrl) {
           trip.photoUrl = newPhotoUrls[0];
+        }
+
+        if (!trip.coverImage && trip.photoUrl) {
+          trip.coverImage = trip.photoUrl;
         }
 
         trip.photos = [...new Set([...(trip.photos || []), ...newPhotoUrls])];

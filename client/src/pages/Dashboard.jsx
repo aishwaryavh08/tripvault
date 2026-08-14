@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { showToast } from "../utils/toast";
+import { API_BASE_URL } from "../config";
+
+const TRIP_DRAFT_KEY = "tripvault-trip-draft";
 
 function Dashboard() {
   const initialFormData = {
@@ -22,12 +26,36 @@ function Dashboard() {
   const [dateSort, setDateSort] = useState("");
   const [photoFiles, setPhotoFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const [formData, setFormData] = useState(initialFormData);
 
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(TRIP_DRAFT_KEY);
+
+    if (savedDraft) {
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        setFormData((prev) => ({ ...initialFormData, ...prev, ...parsedDraft }));
+      } catch (err) {
+        console.log("Draft load error:", err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(TRIP_DRAFT_KEY, JSON.stringify(formData));
+  }, [formData]);
+
+  const clearTripDraft = () => {
+    localStorage.removeItem(TRIP_DRAFT_KEY);
+  };
 
   // =========================
   // GET USER + TRIPS
@@ -41,33 +69,29 @@ function Dashboard() {
 
     const fetchData = async () => {
       try {
-        const userResponse = await axios.get(
-          "http://localhost:5000/api/auth/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const userResponse = await axios.get(`${API_BASE_URL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         setUser(userResponse.data);
 
-        const tripsResponse = await axios.get(
-          "http://localhost:5000/api/trips",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const tripsResponse = await axios.get(`${API_BASE_URL}/api/trips`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         setTrips(tripsResponse.data);
       } catch (error) {
         console.log(error);
 
         localStorage.removeItem("token");
-        alert("Session expired. Please login again.");
+        showToast("Session expired. Please login again.", "error");
         navigate("/login");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -94,13 +118,17 @@ function Dashboard() {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
     setPhotoFiles(files);
-    setPreviewUrls(files.map((file) => URL.createObjectURL(file)));
+
+    const urls = files.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
   };
+   
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      setSubmitting(true);
       const data = new FormData();
       data.append("title", formData.title);
       data.append("destination", formData.destination);
@@ -108,20 +136,18 @@ function Dashboard() {
       if (formData.endDate) data.append("endDate", formData.endDate);
       if (formData.description) data.append("description", formData.description);
       if (formData.rating) data.append("rating", Number(formData.rating));
-      photoFiles.forEach((file) => data.append("photos", file));
+      photoFiles.forEach((file) => {
+        data.append("photos", file);
+      });
 
       let response;
 
       if (editingTripId) {
-        response = await axios.put(
-          `http://localhost:5000/api/trips/${editingTripId}`,
-          data,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        response = await axios.put(`${API_BASE_URL}/api/trips/${editingTripId}`, data, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         setTrips((prevTrips) =>
           prevTrips.map((trip) =>
@@ -129,26 +155,29 @@ function Dashboard() {
           )
         );
 
-        alert("Trip updated successfully!");
+        showToast("Trip updated successfully!", "success");
       } else {
-        response = await axios.post("http://localhost:5000/api/trips", data, {
+        response = await axios.post(`${API_BASE_URL}/api/trips`, data, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
         setTrips((prevTrips) => [response.data, ...prevTrips]);
-        alert("Trip added successfully!");
+        showToast("Trip added successfully!", "success");
       }
 
       setFormData(initialFormData);
-      setPhotoFile(null);
-      setPreviewUrl("");
+      setPhotoFiles([]);
+      setPreviewUrls([]);
+      clearTripDraft();
       setEditingTripId(null);
       setShowForm(false);
     } catch (error) {
       console.log(error);
-      alert("Could not save trip.");
+      showToast("Could not save trip.", "error");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -198,14 +227,11 @@ function Dashboard() {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/trips/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.delete(`${API_BASE_URL}/api/trips/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setTrips((prevTrips) => prevTrips.filter((trip) => trip._id !== id));
 
@@ -215,10 +241,10 @@ function Dashboard() {
         setShowForm(false);
       }
 
-      alert("Trip deleted successfully!");
+      showToast("Trip deleted successfully!", "success");
     } catch (error) {
       console.log(error);
-      alert("Could not delete trip.");
+      showToast("Could not delete trip.", "error");
     }
   };
 
@@ -241,13 +267,14 @@ function Dashboard() {
       rating: trip.rating ? String(trip.rating) : "",
       photoUrl: trip.photoUrl || "",
     });
-    setPhotoFile(null);
-    setPreviewUrl(trip.photoUrl || "");
+    setPhotoFiles([]);
+    setPreviewUrls(trip.photoUrl ? [trip.photoUrl] : []);
     setShowForm(true);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
+    showToast("Logged out successfully", "success");
     navigate("/login");
   };
 
@@ -290,33 +317,50 @@ function Dashboard() {
       {/* ================= NAVBAR ================= */}
 
       <nav className="navbar">
-        <div className="logo">
-          ✈️ TripVault
+        <div className="navbar-brand">
+          <span className="navbar-brand-icon">✈️</span>
+          <span>TripVault</span>
         </div>
 
-        <div className="navbar-actions">
+        <button
+          type="button"
+          className="navbar-menu-toggle"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label="Toggle navigation menu"
+        >
+          ☰
+        </button>
+
+        <div className={`navbar-actions ${menuOpen ? "mobile-open" : ""}`}>
           <button
             className="logout-button"
             onClick={() => {
-              const profileName = user?.Username || user?.username || user?.name;
+              setMenuOpen(false);
+              const profileName = user?.username || user?.Username || user?.name;
               if (profileName) {
                 navigate(`/profile/${encodeURIComponent(profileName)}`);
               }
             }}
           >
-            Public Profile
+            My Profile
           </button>
 
           <button
             className="logout-button"
-            onClick={() => navigate("/edit-profile")}
+            onClick={() => {
+              setMenuOpen(false);
+              navigate("/edit-profile");
+            }}
           >
             Edit Profile
           </button>
 
           <button
             className="logout-button"
-            onClick={logout}
+            onClick={() => {
+              setMenuOpen(false);
+              logout();
+            }}
           >
             Logout
           </button>
@@ -325,7 +369,15 @@ function Dashboard() {
 
       {/* ================= MAIN ================= */}
 
-      <div className="dashboard-content">
+{loading ? (
+          <div className="dashboard-content">
+            <div className="empty-trip">
+              <div className="empty-icon">⏳</div>
+              <h3>Loading your travel dashboard...</h3>
+            </div>
+          </div>
+        ) : (
+        <div className="dashboard-content">
 
         {/* ================= WELCOME CARD ================= */}
 
@@ -460,23 +512,73 @@ function Dashboard() {
                   type="file"
                   name="photo"
                   accept="image/jpeg, image/jpg, image/png"
+                  multiple
                   onChange={handleFileChange}
                 />
 
                 <span className="photo-upload-help">
-                  Choose a photo to represent your trip.
+                  Select multiple photos The first photo will be your cover image and the rest will appear in the gallery.
                 </span>
               </div>
 
-              {previewUrl && (
+              {/* {previewUrls && (
                 <div className="photo-preview">
+                  {previewUrls.map((url, index)=>}
+                  (
                   <img
-                    src={previewUrl}
+                    src={previewUrls[0]}
                     alt="Trip preview"
                     className="preview-image"
                   />
+                  ))}
                 </div>
-              )}
+              )} */}
+              {/* {previewUrls.length > 0 && (
+  <div className="photo-preview">
+    {previewUrls.map((url, index) => (
+      <img
+        key={index}
+        src={url}
+        alt={`Trip preview ${index + 1}`}
+        className="preview-image"
+      />
+    ))}
+  </div>
+)} */}
+  {previewUrls.length > 0 && (
+  <div className="photo-preview-container">
+
+    {/* COVER IMAGE */}
+    <div className="cover-preview">
+      <p>Cover Image</p>
+
+      <img
+        src={previewUrls[0]}
+        alt="Cover preview"
+        className="preview-image"
+      />
+    </div>
+
+    {/* GALLERY */}
+    {previewUrls.length > 1 && (
+      <div className="gallery-preview">
+        <p>Gallery Photos</p>
+
+        <div className="preview-grid">
+          {previewUrls.slice(1).map((url, index) => (
+            <img
+              key={index}
+              src={url}
+              alt={`Gallery preview ${index + 1}`}
+              className="preview-grid-image"
+            />
+          ))}
+        </div>
+      </div>
+    )}
+
+  </div>
+)}
 
               <select
                 name="rating"
@@ -525,8 +627,8 @@ function Dashboard() {
                   onClick={() => {
                     setShowForm(false);
                     setEditingTripId(null);
-                    setPhotoFile(null);
-                    setPreviewUrl("");
+                    setPhotoFiles([]);
+                    setPreviewUrls([]);
                     setFormData({
                       title: "",
                       destination: "",
@@ -748,9 +850,11 @@ function Dashboard() {
         </div>
 
       </div>
+        )}
 
     </div>
   );
 }
 
 export default Dashboard;
+

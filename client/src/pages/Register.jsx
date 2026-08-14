@@ -1,6 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { showToast } from "../utils/toast";
+import { API_BASE_URL } from "../config";
 
 function Register() {
   const navigate = useNavigate();
@@ -10,6 +12,7 @@ function Register() {
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({
@@ -20,20 +23,27 @@ function Register() {
 
   const register = async () => {
     if (!form.name || !form.email || !form.password) {
-      alert("Please fill all fields");
+      showToast("Please fill all fields", "error");
       return;
     }
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        form
-      );
+      setLoading(true);
+      const payload = {
+        Username: form.name.trim(),
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+      };
 
-      alert(res.data.message || "Registration Successful");
+      const res = await axios.post(`${API_BASE_URL}/api/auth/register`, payload);
+
+      showToast(res.data.message || "Registration successful", "success");
       navigate("/login");
     } catch (err) {
-      alert(err.response?.data?.message || "Registration Failed");
+      showToast(err.response?.data?.message || "Registration failed", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,8 +82,8 @@ function Register() {
             onChange={handleChange}
           />
 
-          <button onClick={register}>
-            Create Account
+          <button onClick={register} disabled={loading}>
+            {loading ? "Creating..." : "Create Account"}
           </button>
         </div>
 
