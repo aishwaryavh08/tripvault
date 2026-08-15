@@ -341,6 +341,13 @@ router.post(
   upload.array("photos", 10),
   async (req, res) => {
     try {
+      console.log("UPLOAD ROUTE HIT", {
+        tripId: req.params.id,
+        userId: req.user?.id,
+        fileCount: req.files?.length || 0,
+        authHeaderPresent: Boolean(req.headers.authorization),
+      });
+
       // Find the trip belonging to the logged-in user
       const trip = await Trip.findOne({
         _id: req.params.id,
@@ -355,12 +362,21 @@ router.post(
 
       // Check if images were uploaded
       if (!req.files || req.files.length === 0) {
+        console.error("UPLOAD ROUTE: no files received", {
+          tripId: req.params.id,
+          userId: req.user?.id,
+          bodyKeys: Object.keys(req.body || {}),
+        });
         return res.status(400).json({
           message: "Please upload one or more images",
         });
       }
 
       const imageUrls = req.files.map((file) => normalizeUploadedUrl(file));
+      console.log("UPLOAD ROUTE: normalized file URLs", {
+        tripId: req.params.id,
+        imageUrls,
+      });
 
       // Ensure we only keep valid URLs
       const validUrls = imageUrls.filter(Boolean);

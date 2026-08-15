@@ -99,6 +99,14 @@ function TripDetails() {
       formData.append("photos", file);
     });
 
+    console.log("PHOTO UPLOAD START", {
+      tripId: id,
+      API_URL: `${API_BASE_URL}/api/trips/${id}/upload`,
+      selectedCount: selectedFiles.length,
+      fileNames: selectedFiles.map((file) => file.name),
+      tokenPresent: Boolean(token),
+    });
+
     try {
       setUploading(true);
 
@@ -119,7 +127,15 @@ function TripDetails() {
         fileInputRef.current.value = "";
       }
     } catch (uploadErr) {
-      console.log("UPLOAD ERROR:", uploadErr);
+      console.error("PHOTO UPLOAD FAILED", {
+        tripId: id,
+        selectedCount: selectedFiles.length,
+        status: uploadErr.response?.status,
+        backendMessage: uploadErr.response?.data?.message,
+        backendError: uploadErr.response?.data?.error,
+        errorMessage: uploadErr.message,
+        stack: uploadErr.stack,
+      });
       setUploadError(
         uploadErr.response?.data?.message || "Could not upload photos."
       );
