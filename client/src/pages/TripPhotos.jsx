@@ -18,7 +18,7 @@ function TripPhotos() {
 
     const fetchTrip = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/trips/${id}`, {
+        const response = await axios.get(`https://tripvault-u534.onrender.com/api/trips/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

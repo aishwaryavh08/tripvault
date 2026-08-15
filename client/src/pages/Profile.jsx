@@ -20,7 +20,7 @@ function Profile() {
 
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/users/${username}/profile`
+          `https://tripvault-u534.onrender.com/api/users/${username}/profile`
         );
 
         setProfile(response.data);
@@ -29,7 +29,7 @@ function Profile() {
         if (token) {
           try {
             const meResponse = await axios.get(
-              "http://localhost:5000/api/auth/me",
+              "https://tripvault-u534.onrender.com/api/auth/me",
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ function Profile() {
 
     try {
       const response = await axios.put(
-        "http://localhost:5000/api/users/profile",
+        "https://tripvault-u534.onrender.com/api/users/profile",
         { bio },
         {
           headers: {

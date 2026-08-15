@@ -72,7 +72,8 @@ function normalizeUploadedUrl(file) {
   }
 
   const filename = replaced.split("/uploads/").pop() || replaced.split("\\uploads\\").pop() || path.basename(replaced);
-  return `http://localhost:5000/uploads/${filename}`;
+  // return `http://localhost:5000/uploads/${filename}`;
+  return `https://tripvault-u534.onrender.com/uploads/${filename}`;
 }
 
 function buildTripUpdateData(body = {}, file) {

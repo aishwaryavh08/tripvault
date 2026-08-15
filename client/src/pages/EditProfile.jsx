@@ -18,7 +18,7 @@ function EditProfile() {
     const fetchProfile = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/auth/me",
+          "https://tripvault-u534.onrender.com/api/auth/me",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -41,7 +41,7 @@ function EditProfile() {
 
     try {
       await axios.put(
-        "http://localhost:5000/api/users/profile",
+        "https://tripvault-u534.onrender.com/api/users/profile",
         {
           Username,
           bio,

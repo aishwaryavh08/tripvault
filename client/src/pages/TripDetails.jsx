@@ -25,7 +25,7 @@ function TripDetails() {
         }
 
         const response = await axios.get(
-          `http://localhost:5000/api/trips/${id}`,
+          `https://tripvault-u534.onrender.com/api/trips/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -102,7 +102,7 @@ function TripDetails() {
       setUploading(true);
 
       const response = await axios.post(
-        `http://localhost:5000/api/trips/${id}/upload`,
+        `https://tripvault-u534.onrender.com/api/trips/${id}/upload`,
         formData,
         {
           headers: {

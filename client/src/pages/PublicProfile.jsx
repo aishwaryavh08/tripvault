@@ -13,7 +13,7 @@ function PublicProfile() {
     const fetchProfile = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/users/${username}/profile`
+          `https://tripvault-u534.onrender.com/api/users/${username}/profile`
         );
 
         setProfile(response.data);
