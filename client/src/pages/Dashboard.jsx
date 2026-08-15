@@ -174,8 +174,22 @@ function Dashboard() {
       setEditingTripId(null);
       setShowForm(false);
     } catch (error) {
-      console.log(error);
-      showToast("Could not save trip.", "error");
+      const backendMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Could not save trip.";
+
+      console.error("Trip save failed:", {
+        status: error.response?.status,
+        endpoint: `${API_BASE_URL}/api/trips`,
+        data: error.response?.data,
+        message: error.message,
+        title: formData.title,
+        destination: formData.destination,
+        photoCount: photoFiles.length,
+      });
+
+      showToast(backendMessage, "error");
     } finally {
       setSubmitting(false);
     }

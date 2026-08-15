@@ -172,6 +172,24 @@ router.post("/", auth, upload.array("photos", 10), async (req, res) => {
       });
     }
 
+    if ((req.files || []).length > 0 && photoUrls.length === 0) {
+      console.error("Trip creation failed: uploaded file(s) received but no valid image URLs were generated.", {
+        fileCount: (req.files || []).length,
+        files: (req.files || []).map((file) => ({
+          fieldname: file.fieldname,
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          path: file.path,
+          url: file.url,
+          secure_url: file.secure_url,
+        })),
+      });
+
+      return res.status(500).json({
+        message: "Photo upload is not configured on the server. Please retry without uploading photos or check the Cloudinary environment variables.",
+      });
+    }
+
     const photoUrl = photoUrls.length > 0 ? photoUrls[0] : "";
     const coverImage = photoUrl || "";
     const photos = photoUrls.length > 1 ? photoUrls.slice(1) : [];
@@ -191,12 +209,19 @@ router.post("/", auth, upload.array("photos", 10), async (req, res) => {
 
     await trip.save();
 
-    res.status(201).json(trip);
+    res.status(201).json(sanitizeTripMedia(trip));
   } catch (err) {
-    console.log(err);
+    console.error("CREATE TRIP ERROR:", {
+      message: err.message,
+      stack: err.stack,
+      body: req.body,
+      fileCount: req.files?.length || 0,
+      userId: req.user?.id,
+    });
 
     res.status(500).json({
       message: "Server Error",
+      error: err.message,
     });
   }
 });
