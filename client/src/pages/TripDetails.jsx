@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 
 function TripDetails() {
   const { id } = useParams();
@@ -25,7 +26,7 @@ function TripDetails() {
         }
 
         const response = await axios.get(
-          `https://tripvault-u534.onrender.com/api/trips/${id}`,
+          `${API_BASE_URL}/api/trips/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -102,7 +103,7 @@ function TripDetails() {
       setUploading(true);
 
       const response = await axios.post(
-        `https://tripvault-u534.onrender.com/api/trips/${id}/upload`,
+        `${API_BASE_URL}/api/trips/${id}/upload`,
         formData,
         {
           headers: {

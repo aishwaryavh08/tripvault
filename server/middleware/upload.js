@@ -1,3 +1,4 @@
+const path = require("path");
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
@@ -10,7 +11,7 @@ const cloudinaryConfigured = Boolean(
 
 if (!cloudinaryConfigured) {
   console.error(
-    "Cloudinary env vars are missing. Photo uploads will fail until CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET are set on Render."
+    "Cloudinary env vars are missing. Falling back to local uploads in server/uploads until CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET are configured on Render."
   );
 }
 
@@ -28,7 +29,15 @@ const storage = cloudinaryConfigured
         allowed_formats: ["jpg", "jpeg", "png", "webp"],
       },
     })
-  : multer.memoryStorage();
+  : multer.diskStorage({
+      destination: function (_req, _file, cb) {
+        cb(null, path.join(__dirname, "../uploads"));
+      },
+      filename: function (_req, file, cb) {
+        const safeName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname || "")}`;
+        cb(null, safeName);
+      },
+    });
 
 const upload = multer({
   storage,

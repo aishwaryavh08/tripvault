@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 
 function normalizeImageUrl(url) {
   if (typeof url !== "string") return "";
@@ -31,7 +32,7 @@ function TripPhotos() {
 
     const fetchTrip = async () => {
       try {
-        const response = await axios.get(`https://tripvault-u534.onrender.com/api/trips/${id}`, {
+        const response = await axios.get(`${API_BASE_URL}/api/trips/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
