@@ -59,6 +59,23 @@ const Trip = require("../models/Trip");
 const auth = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
+function normalizeAssetUrl(value) {
+  if (typeof value !== "string") return "";
+
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  if (trimmed.startsWith("http://localhost")) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("http://")) {
+    return `https://${trimmed.slice("http://".length)}`;
+  }
+
+  return trimmed;
+}
+
 function normalizeUploadedUrl(file) {
   if (!file) return "";
 
@@ -66,14 +83,37 @@ function normalizeUploadedUrl(file) {
   if (!raw) return "";
 
   const replaced = raw.replace(/\\/g, "/");
+  const normalizedUrl = normalizeAssetUrl(replaced);
 
-  if (replaced.startsWith("http://") || replaced.startsWith("https://")) {
-    return replaced;
+  if (normalizedUrl.startsWith("http://") || normalizedUrl.startsWith("https://")) {
+    return normalizedUrl;
   }
 
   const filename = replaced.split("/uploads/").pop() || replaced.split("\\uploads\\").pop() || path.basename(replaced);
   // return `http://localhost:5000/uploads/${filename}`;
   return `https://tripvault-u534.onrender.com/uploads/${filename}`;
+}
+
+function sanitizeTripMedia(trip) {
+  if (!trip) return trip;
+
+  const safeTrip = trip && typeof trip.toObject === "function" ? trip.toObject() : { ...trip };
+
+  if (safeTrip.photoUrl) {
+    safeTrip.photoUrl = normalizeAssetUrl(safeTrip.photoUrl);
+  }
+
+  if (safeTrip.coverImage) {
+    safeTrip.coverImage = normalizeAssetUrl(safeTrip.coverImage);
+  }
+
+  if (Array.isArray(safeTrip.photos)) {
+    safeTrip.photos = safeTrip.photos.map(normalizeAssetUrl).filter(Boolean);
+  } else if (typeof safeTrip.photos === "string" && safeTrip.photos.trim()) {
+    safeTrip.photos = normalizeAssetUrl(safeTrip.photos);
+  }
+
+  return safeTrip;
 }
 
 function buildTripUpdateData(body = {}, file) {
@@ -168,7 +208,7 @@ router.get("/", auth, async (req, res) => {
       user: req.user.id,
     }).sort({ createdAt: -1 });
 
-    res.json(trips);
+    res.json(trips.map((trip) => sanitizeTripMedia(trip)));
   } catch (err) {
     console.log(err);
 
@@ -192,7 +232,7 @@ router.get("/:id", auth, async (req, res) => {
       });
     }
 
-    res.json(trip);
+    res.json(sanitizeTripMedia(trip));
   } catch (err) {
     console.log(err);
 
@@ -322,7 +362,7 @@ router.post(
 
       res.json({
         message: "Photos uploaded successfully",
-        trip,
+        trip: sanitizeTripMedia(trip),
       });
     } catch (err) {
       console.log("UPLOAD ERROR:", err);
@@ -373,7 +413,7 @@ router.put("/:id", auth, upload.array("photos", 10), async (req, res) => {
 
     await trip.save();
 
-    res.json(trip);
+    res.json(sanitizeTripMedia(trip));
   } catch (err) {
     console.log(err);
 

@@ -2,6 +2,19 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
+function normalizeImageUrl(url) {
+  if (typeof url !== "string") return "";
+
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  if (trimmed.startsWith("http://localhost")) {
+    return trimmed;
+  }
+
+  return trimmed.replace(/^http:\/\//i, "https://");
+}
+
 function TripPhotos() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -57,7 +70,9 @@ function TripPhotos() {
     photos.push(trip.photoUrl);
   }
 
-  const uniquePhotos = [...new Set(photos.filter(Boolean))];
+  const uniquePhotos = [...new Set(photos.map(normalizeImageUrl).filter(Boolean))];
+  console.log("Trip data:", trip);
+  console.log("Photos:", uniquePhotos);
 
   return (
     <div className="dashboard-page detail-page">
