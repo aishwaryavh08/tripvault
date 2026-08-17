@@ -3,23 +3,28 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 
+const cloudName = String(process.env.CLOUDINARY_CLOUD_NAME || "").trim();
+const apiKey = String(process.env.CLOUDINARY_API_KEY || "").trim();
+const apiSecret = String(process.env.CLOUDINARY_API_SECRET || "").trim();
+
 const cloudinaryConfigured = Boolean(
-  process.env.CLOUDINARY_CLOUD_NAME &&
-    process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET
+  cloudName &&
+    apiKey &&
+    apiSecret &&
+    /^[a-z0-9-]+$/i.test(cloudName)
 );
 
 if (!cloudinaryConfigured) {
   console.error(
-    "Cloudinary env vars are missing. Falling back to local uploads in server/uploads until CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET are configured on Render."
+    "Cloudinary env vars are missing or invalid. Falling back to local uploads in server/uploads."
   );
+} else {
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+  });
 }
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 const storage = cloudinaryConfigured
   ? new CloudinaryStorage({

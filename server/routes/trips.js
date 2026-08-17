@@ -76,6 +76,18 @@ function normalizeAssetUrl(value) {
   return trimmed;
 }
 
+function getServerBaseUrl() {
+  if (process.env.APP_BASE_URL && process.env.APP_BASE_URL.trim()) {
+    return process.env.APP_BASE_URL.trim().replace(/\/$/, "");
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`.replace(/\/$/, "");
+  }
+
+  return `http://localhost:${process.env.PORT || 5000}`;
+}
+
 function normalizeUploadedUrl(file) {
   if (!file) return "";
 
@@ -90,7 +102,7 @@ function normalizeUploadedUrl(file) {
   }
 
   const filename = replaced.split("/uploads/").pop() || replaced.split("\\uploads\\").pop() || path.basename(replaced);
-  return `https://tripvault-u534.onrender.com/uploads/${filename}`;
+  return `${getServerBaseUrl()}/uploads/${filename}`;
 }
 
 function sanitizeTripMedia(trip) {
