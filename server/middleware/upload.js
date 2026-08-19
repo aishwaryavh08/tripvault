@@ -15,9 +15,14 @@ const cloudinaryConfigured = Boolean(
 );
 
 if (!cloudinaryConfigured) {
-  console.error(
-    "Cloudinary env vars are missing or invalid. Falling back to local uploads in server/uploads."
-  );
+  const message =
+    "Cloudinary env vars are missing or invalid. Photo uploads require persistent Cloudinary storage.";
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(message);
+  }
+
+  console.error(`${message} Falling back to local uploads in server/uploads.`);
 } else {
   cloudinary.config({
     cloud_name: cloudName,

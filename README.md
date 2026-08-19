@@ -74,6 +74,15 @@ Client `.env`:
 VITE_API_URL=http://localhost:5000
 ```
 
+For the Vercel frontend, set `VITE_API_URL` in the Vercel project settings to the
+deployed backend URL, for example `https://your-render-app.onrender.com`, then
+redeploy the frontend. Do not use `http://localhost:5000` in the Vercel environment.
+
+For the deployed backend, set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+`CLOUDINARY_API_SECRET` in the backend hosting provider. The backend will refuse to
+start in production without these values because local filesystem uploads are not
+persistent on serverless or ephemeral hosting.
+
 ## Project Structure
 
 ```text
